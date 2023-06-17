@@ -1,0 +1,15 @@
+{
+  "name": "sqs-notification",
+  "version": "1.0.0",
+  "description": "Serverless Framework Python SQS Producer-Consumer on AWS",
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "serverless-lift": "^1.21.0",
+    "serverless-python-requirements": "^6.0.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1397.0",
+    "xlsx": "^0.18.5"
+  }
+}

@@ -1,0 +1,58 @@
+service: notification-service
+frameworkVersion: "3"
+
+custom:
+  S3_BUCKET_NAME: notificationtemplates1t1l1te
+  SQS_ARN: !GetAtt MySQSQueue.Arn
+  QUEUE_URL: !GetAtt MySQSQueue.QueueUrl
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource:
+            - arn:aws:s3:::${self:custom.S3_BUCKET_NAME}/*
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            - ${self:custom.SQS_ARN}
+
+
+functions:
+  processS3Upload:
+    handler: sendMessageToSQS.handler
+    events:
+      - s3:
+          bucket: ${self:custom.S3_BUCKET_NAME}
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .xlsx
+          existing: true
+    environment:
+      QUEUE_URL: ${self:custom.QUEUE_URL}
+
+resources:
+  Resources:
+    MySQSQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: my-sqs-queue
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - MyDLQ
+              - Arn
+          maxReceiveCount: 10
+
+    MyDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: my-dlq
+
